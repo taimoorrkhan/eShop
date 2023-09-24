@@ -147,6 +147,86 @@ const updatePassword = catchAsyncErrors(async (req, res, next) => {
  
 })
 
+// update user profile => /api/v1/profiles/update
+
+const updateUserProfile = catchAsyncErrors(async (req, res, next) => {
+  const newUserData = {
+    name: req.body.name,
+    email: req.body.email
+  }
+  // Update Avatar : TODO
+  const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false
+  })
+  res.status(200).json({
+    success: true,
+    data: user
+  })
+})
+
+//Admin Routes
+
+// get all users => /api/v1/admin/users
+
+const getAllUsers = catchAsyncErrors(async (req, res, next) => {
+  const users = await User.find();
+  res.status(200).json({
+    success: true,
+    data: users
+  })
+})
+
+// get user Details => /api/v1/admin/user/:id
+
+const getUserDetails = catchAsyncErrors(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    return next(new ErrorHandler('User Not Found', 401));
+  }
+  res.status(200).json({
+    success: true,
+    data: user
+  })
+})
+
+// Update Admin User Profile => /api/admin/user/:id
+
+const updateAdminUserProfile = catchAsyncErrors(async (req, res, next) => {
+  const newUserData = {
+    name: req.body.name,
+    email: req.body.email,
+    role: req.body.role
+  }
+  const user = await User.findByIdAndUpdate(req.params.id, newUserData, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false
+  })
+  res.status(200).json({
+    success: true,
+    data: user
+  })
+})
+
+// Delete User => /api/v1/admin/user/:id
+
+const deleteUser = catchAsyncErrors(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    return next(new ErrorHandler('User Not Found', 401));
+  }
+  // Remove AVATAR from cloudinary : TODO
+
+  await user.remove();
+  res.status(200).json({
+    success: true,
+    data: user
+  })
+})
+
+
 module.exports = {
   registerUser,
   loginUser,
@@ -154,5 +234,11 @@ module.exports = {
   forgotPassword,
   resetPassword,
   getUserProfile,
-  updatePassword
+  updatePassword,
+  updateUserProfile,
+  getAllUsers,
+  getUserDetails,
+  updateAdminUserProfile,
+  deleteUser
+
 }
