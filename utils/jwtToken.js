@@ -1,4 +1,3 @@
-const ErrorHandler = require('./errorHandler');
 const sendToken = (user, statusCode, res) => {
   const token = user.getJwtToken();
 
@@ -17,7 +16,8 @@ const sendToken = (user, statusCode, res) => {
       user
     });
   } else {
-   return next(new ErrorHandler('Invalid Cookie Expires Time', 500));
+    // Handle the case where COOKIE_EXPIRES_TIME is not a valid value.
+    res.status(500).json({ success: false, message: 'Invalid cookie expiration time' });
   }
 
 }
