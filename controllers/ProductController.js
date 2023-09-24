@@ -5,27 +5,16 @@ const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const APIFeatures = require("../utils/apiFeatures");
 
 
-//Creating Product
-
-const AddProduct = async (req, res, next) => {
 
 
-  const product = await Product.create(req.body);
-  res.status(201).json({
-    success: true,
-    product
-  })
-
-
-}
 
 //Get All Products
 const getProducts = catchAsyncErrors(async (req, res, next) => {
   const resPerPage = 4;
   const productCount = await Product.countDocuments();
   const apiFeatures = new APIFeatures(Product.find(), req.query)
-    .search()
-    .filter()
+  .search()
+  .filter()
     .pagination(resPerPage)
   const products = await apiFeatures.query;
   res.status(200).json({
@@ -37,7 +26,7 @@ const getProducts = catchAsyncErrors(async (req, res, next) => {
 
 
 const getSingeProduct = catchAsyncErrors(async (req, res, next) => {
-
+  
   const product = await Product.findById(req.params.id);
   if (!product) {
     return next(new ErrorHandler("Product not found", 404))
@@ -47,6 +36,18 @@ const getSingeProduct = catchAsyncErrors(async (req, res, next) => {
     product
   })
 })
+
+//Creating Product
+const AddProduct = async (req, res, next) => {
+  req.body.user = req.user.id;
+  const product = await Product.create(req.body);
+  res.status(201).json({
+    success: true,
+    product
+  })
+
+
+}
 
 const updateProduct = catchAsyncErrors(async (req, res, next) => {
   let product = await Product.findById(req.params.id);
