@@ -1,28 +1,27 @@
 const User = require('../models/user');
-
 const ErrorHandler = require("../utils/errorHandler");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const sendToken = require('../utils/jwtToken');
 const crypto = require('crypto');
-
 const sendEmail = require('../utils/sendEmail');
 //Register a user => /api/v1/register
 
 const registerUser = catchAsyncErrors(async (req, res, next) => {
   
-    const { name, email, password } = req.body;
+  const { name, email, password } = req.body;
   
-    const user = await User.create({
-      name,
-      email,
-      password,
-      avatar: {
-        public_id: 'avatars/kkqjz1v9j0hjv3jwz5xj',
-        url: 'https://res.cloudinary.com/bookit/image/upload/v1606307075/avatars/kkqjz1v9j0hjv3jwz5xj.jpg'
-      }
-    })
+  const user = await User.create({
+    name,
+    email,
+    password,
+    avatar: {
+      public_id: 'avatars/kkqjz1v9j0hjv3jwz5xj',
+      url: 'https://res.cloudinary.com/bookit/image/upload/v1606307075/avatars/kkqjz1v9j0hjv3jwz5xj.jpg'
+    }
+  })
   sendToken(user, 200, res);
-})
+}
+);
 
 // Login User => /api/v1/login
 
@@ -119,11 +118,41 @@ const resetPassword = catchAsyncErrors(async (req, res, next) => {
   })
 })
 
+// get Currently Logged in user details => /api/v1/me
+
+const getUserProfile = catchAsyncErrors(async (req, res, next) => {
+  const user = await User.findById(req.user.id)
+  res.status(200).json({
+    success: true,
+    data: user
+  })
+}) 
+
+// update / change password => /api/v1/password/update
+
+const updatePassword = catchAsyncErrors(async (req, res, next) => {
+  const user = await User.findById(req.user.id).select('+password');
+  if(!user) {
+    return next(new ErrorHandler('User Not Found', 401));
+  }
+  // Check previous user password
+  const isPasswordMatched = await user.comparePassword(req.body.oldPassword);
+  if(!isPasswordMatched) {
+    return next(new ErrorHandler('Invalid  Password', 401));
+  }
+
+  user.password = req.body.password;
+  await user.save({ validateBeforeSave: false });
+  sendToken(user, 200, res);
+ 
+})
 
 module.exports = {
   registerUser,
   loginUser,
   logout,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  getUserProfile,
+  updatePassword
 }
